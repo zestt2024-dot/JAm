@@ -6,11 +6,17 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
-    res.cookie('session_id', 'FLAG{JS_COOKIE_MONSTER_2025}', { httpOnly: false });
+    res.setHeader("X-XSS-Protection", "0");
+    res.setHeader("Content-Security-Policy", "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval';");
     next();
 });
 
-let comments = [{ user: "Admin", text: "Dear Enginners" }];
+app.use((req, res, next) => {
+    res.cookie('session_id', 'FLAG{HACKED_BY_AHMED_GAMAL}', { httpOnly: false });
+    next();
+});
+
+let comments = [{ user: "Admin", text: "Welcome to IT Gate Academy Lab!" }];
 let config = { isAdmin: false }; 
 
 const headerStyle = `
@@ -68,8 +74,8 @@ app.get('/', (req, res) => {
         ${headerStyle}
         <div class="container py-5">
             <header class="text-center mb-5">
-                <h1 class="display-4 fw-bold">🛡️IT Gate Academy</h1>
-                <p class="text-muted lead"> With Eng Ahmed Gamal  </p>
+                <h1 class="display-4 fw-bold">🛡️ IT Gate Academy</h1>
+                <p class="text-muted lead"> With Eng Ahmed Gamal </p>
             </header>
             
             <div class="row g-4">
@@ -114,22 +120,26 @@ app.get('/search', (req, res) => {
 });
 
 app.get('/guestbook', (req, res) => {
+    if (req.query.comment) {
+        comments.push({ user: "Student", text: req.query.comment });
+    }
     let list = comments.map(c => `<li><b>${c.user}:</b> ${c.text}</li>`).join('');
-    renderInside(res, "سجل الزوار", `<ul>${list}</ul>`, "اترك بصمتك هنا...");
+    renderInside(res, "سجل الزوار", `<ul>${list}</ul>`, "اترك تعليقك هنا...", "comment");
 });
 
 app.get('/ping', (req, res) => {
     const host = req.query.host;
     if (host) {
-        exec(`ping -c 1 ${host}`, (err, stdout) => { renderInside(res, "Network Tool", `<pre>${stdout || err}</pre>`, "أدخل IP السيرفر..."); });
+        exec(`ping -c 1 ${host}`, (err, stdout) => { renderInside(res, "Network Tool", `<pre>${stdout || err}</pre>`, "أدخل IP السيرفر...", "host"); });
     } else {
-        renderInside(res, "Network Tool", "بانتظار العنوان...", "أدخل IP السيرفر...");
+        renderInside(res, "Network Tool", "بانتظار العنوان...", "أدخل IP السيرفر...", "host");
     }
 });
 
 app.get('/logout-page', (req, res) => {
     res.send(`${headerStyle}<div class="container py-5 text-center"><div class="card p-5 mx-auto shadow" style="max-width: 500px;"><h3>سيتم تسجيل خروجك</h3><p class="text-light opacity-50">اضغط للتأكيد وسنقوم بتوجيهك.</p><a href="/redirect?url=/" class="btn btn-danger mt-3">خروج آمن</a></div></div>`);
 });
+
 app.get('/redirect', (req, res) => { res.redirect(req.query.url); });
 
 app.get('/profile', (req, res) => {
@@ -140,12 +150,12 @@ app.get('/profile', (req, res) => {
 app.get('/admin-panel', (req, res) => {
     try { const data = JSON.parse(req.query.data || '{}'); for(let key in data) { config[key] = data[key]; } } catch(e) {}
     let result = config.isAdmin ? `<div class="bg-success p-3 rounded text-white">🏆 FLAG{PROTO_POLLUTION_GOD_MODE}</div>` : `<div class="bg-danger p-3 rounded text-white">Access Denied: Admin Only</div>`;
-    renderInside(res, "لوحة التحكم", result, "أدخل بيانات JSON للتحديث...");
+    renderInside(res, "لوحة التحكم", result, "أدخل بيانات JSON للتحديث...", "data");
 });
 
-function renderInside(res, title, content, placeholder) {
-    res.send(`${headerStyle}<div class="container py-5"><a href="/" class="btn btn-dark mb-4 px-4"> < العودة</a><div class="card p-5 shadow"><h2>${title}</h2><form class="my-4"><div class="input-group"><input name="${title === 'Network Tool' ? 'host' : (title === 'لوحة التحكم' ? 'data' : 'q')}" class="form-control" placeholder="${placeholder}"><button class="btn btn-primary px-4">إرسال</button></div></form><div class="flag-box">${content}</div></div></div>`);
+function renderInside(res, title, content, placeholder, inputName = "q") {
+    res.send(`${headerStyle}<div class="container py-5"><a href="/" class="btn btn-dark mb-4 px-4"> < العودة</a><div class="card p-5 shadow"><h2>${title}</h2><form class="my-4"><div class="input-group"><input name="${inputName}" class="form-control" placeholder="${placeholder}"><button class="btn btn-primary px-4">إرسال</button></div></form><div class="flag-box">${content}</div></div></div>`);
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Professional Lab running on port ${PORT}`));
+app.listen(PORT, () => console.log(`IT Gate Academy Lab running on port ${PORT}`));
